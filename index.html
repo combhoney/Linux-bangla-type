@@ -3,164 +3,389 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Linux Bangla Type (Phone to PC) - Voice Typing</title>
+  <title>Linux Bangla Type v2.0 (Phone to PC)</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Google Fonts: Noto Sans Bengali and Noto Sans Devanagari -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
+
+  <!-- html2pdf.js for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     body {
-      font-family: 'Noto Sans Bengali', 'Noto Sans Devanagari', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f8fafc;
+      font-family: 'Noto Sans Bengali', sans-serif;
+      transition: background 0.3s ease, color 0.3s ease;
+      background-color: #f0f9ff;
+      color: #1e293b;
     }
+
+    .dark-mode {
+      background-color: #1e293b;
+      color: #f1f5f9;
+    }
+
+    .dark-mode textarea,
+    .dark-mode select {
+      background-color: #334155;
+      color: #f8fafc;
+      border-color: #475569;
+    }
+
     textarea:focus {
       outline: none;
-      box-shadow: 0 0 0 3px #3b82f6;
+      box-shadow: 0 0 0 3px #60a5fa;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.8s ease-in-out both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Push-to-talk button active style */
+    #pushTalkBtn.active {
+      background-color: #059669 !important; /* Emerald green */
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 10px #10b981;
+      }
+      50% {
+        box-shadow: 0 0 20px #10b981;
+      }
+    }
+
+    /* Scrollbar styling */
+    textarea::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    textarea::-webkit-scrollbar-thumb {
+      background-color: #60a5fa;
+      border-radius: 10px;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
 
-  <header class="bg-blue-900 text-white py-4 shadow-md">
-    <div class="container mx-auto px-4 text-center text-2xl font-semibold">
-      Linux Bangla Type (Phone to PC) - Voice Typing
-    </div>
+<body class="min-h-screen flex flex-col fade-in" id="body">
+
+  <!-- Header -->
+  <header class="bg-blue-800 text-white py-5 shadow-md">
+    <div class="text-center text-3xl font-bold">Linux Bangla Type v2.0</div>
+    <p class="text-center text-sm text-blue-200 mt-1">Phone to PC | Voice Typing | বাংলা, English, हिन्दी</p>
   </header>
 
-  <main class="flex-grow container mx-auto px-4 py-6 max-w-3xl">
-    <div class="mb-4 flex flex-col sm:flex-row items-center gap-4">
-      <select id="languageSelect" class="border border-gray-300 rounded-md p-2 w-full sm:w-48" aria-label="Select language for voice typing">
+  <!-- Main Section -->
+  <main class="flex-grow container mx-auto px-4 py-6 max-w-4xl fade-in">
+    <!-- Control Buttons -->
+    <div class="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
+      <select id="languageSelect" class="rounded-xl p-2 text-sm border shadow focus:ring focus:ring-blue-300">
         <option value="bn-BD">বাংলা (বাংলাদেশ)</option>
         <option value="bn-IN">বাংলা (ভারত)</option>
         <option value="hi-IN">हिन्दी</option>
         <option value="en-US" selected>English (US)</option>
         <option value="en-GB">English (UK)</option>
         <option value="ur-PK">اردو</option>
-        <!-- আরও ভাষা যোগ করতে পারেন -->
       </select>
 
-      <button id="startBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" aria-label="Start Voice Typing">
-        Start Voice Typing
+      <button id="startBtn" class="rounded-xl bg-green-600 hover:bg-green-700 text-white py-2 px-4 shadow transition-all duration-200">
+        🎤 Start
       </button>
 
-      <button id="stopBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-400 disabled:opacity-50" aria-label="Stop Voice Typing" disabled>
-        Stop Voice Typing
+      <button id="stopBtn" class="rounded-xl bg-red-600 hover:bg-red-700 text-white py-2 px-4 shadow transition-all duration-200" disabled>
+        ⛔ Stop
       </button>
 
-      <button id="clearBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400" aria-label="Clear Text Area">
-        Clear
+      <button id="clearBtn" class="rounded-xl bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 shadow transition-all duration-200">
+        🧹 Clear
       </button>
 
-      <button id="copyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Copy Text to Clipboard">
-        Copy Text
+      <button id="copyBtn" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 shadow transition-all duration-200">
+        📋 Copy
+      </button>
+
+      <button id="exportTxtBtn" class="rounded-xl bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 shadow transition-all duration-200">
+        📄 Export .txt
+      </button>
+
+      <button id="exportPdfBtn" class="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 shadow transition-all duration-200">
+        🧾 Export .pdf
       </button>
     </div>
 
-    <textarea id="textArea" rows="12" class="w-full border border-gray-300 rounded-md p-4 text-lg leading-relaxed resize-none" placeholder="এখানে আপনার কথা বলুন বা লিখুন..." aria-label="Text area for voice typing"></textarea>
+    <!-- Push-to-Talk Button -->
+    <div class="mb-4 flex justify-center">
+      <button id="pushTalkBtn" class="rounded-full bg-gray-800 text-white py-3 px-8 shadow-lg hover:bg-gray-900 transition-all duration-200 select-none">
+        🎙️ Hold to Talk
+      </button>
+    </div>
 
-    <p id="status" class="mt-2 text-sm text-gray-600" aria-live="polite"></p>
+    <!-- Textarea -->
+    <textarea id="textArea" rows="14" class="w-full rounded-xl p-4 text-lg leading-relaxed border shadow resize-none bg-white dark-mode:bg-slate-700 dark-mode:text-white" placeholder="এখানে আপনার কথা টাইপ হয়ে যাবে..."></textarea>
+
+    <!-- Status -->
+    <p id="status" class="mt-2 text-sm text-gray-700 dark-mode:text-gray-300"></p>
+
+    <!-- History Section -->
+    <div class="mt-6 bg-gray-100 dark-mode:bg-slate-800 p-4 rounded-xl shadow">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-lg font-semibold text-gray-800 dark-mode:text-gray-200">Typing History</h3>
+        <button id="clearHistoryBtn" class="text-red-600 hover:text-red-800 dark-mode:text-red-400 dark-mode:hover:text-red-600 transition-colors text-sm">Clear History</button>
+      </div>
+      <div id="historyContainer" class="max-h-48 overflow-y-auto p-2 bg-white dark-mode:bg-slate-900 rounded shadow-inner text-sm text-gray-700 dark-mode:text-gray-300 whitespace-pre-wrap font-mono"></div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <div class="mt-6 flex justify-end">
+      <button id="toggleDarkMode" class="rounded-full bg-black/80 hover:bg-black text-white px-4 py-2 shadow transition-all duration-200">
+        🌙 Toggle Dark Mode
+      </button>
+    </div>
   </main>
 
-  <footer class="bg-gray-100 py-4 text-center text-gray-700 text-sm">
-    © 2025 - Made by Yusuf Adnan
+  <!-- Footer -->
+  <footer class="bg-gray-200 text-center text-gray-700 py-3 text-sm dark-mode:bg-slate-800 dark-mode:text-gray-300">
+    © 2025 – Crafted by Yusuf Adnan | AI Assistant Supported
   </footer>
 
-<script>
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const copyBtn = document.getElementById('copyBtn');
-  const textArea = document.getElementById('textArea');
-  const status = document.getElementById('status');
-  const languageSelect = document.getElementById('languageSelect');
+  <!-- JavaScript -->
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const exportTxtBtn = document.getElementById('exportTxtBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const textArea = document.getElementById('textArea');
+    const status = document.getElementById('status');
+    const languageSelect = document.getElementById('languageSelect');
+    const toggleDarkMode = document.getElementById('toggleDarkMode');
+    const body = document.getElementById('body');
+    const pushTalkBtn = document.getElementById('pushTalkBtn');
+    const historyContainer = document.getElementById('historyContainer');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-  let recognition;
-  let recognizing = false;
+    let recognition;
+    let recognizing = false;
+    let finalTranscript = '';
+    let typingHistory = [];
 
-  // Check browser compatibility
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    status.textContent = 'আপনার ব্রাউজার ভয়েস টাইপিং সাপোর্ট করে না। গুগল ক্রোম ব্যবহার করার পরামর্শ।';
-    startBtn.disabled = true;
-  } else {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = languageSelect.value;
-
-    recognition.onstart = () => {
-      recognizing = true;
-      status.textContent = 'ভয়েস টাইপিং চলছে... বলুন...';
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-      languageSelect.disabled = true;
-    };
-
-    recognition.onerror = (event) => {
-      status.textContent = `ত্রুটি: ${event.error}`;
-    };
-
-    recognition.onend = () => {
-      recognizing = false;
-      status.textContent = 'ভয়েস টাইপিং বন্ধ হয়েছে।';
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      languageSelect.disabled = false;
-    };
-
-    recognition.onresult = (event) => {
-      let interimTranscript = '';
-      let finalTranscript = textArea.value;
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-        } else {
-          interimTranscript += transcript;
-        }
+    // Load history from localStorage on page load
+    window.addEventListener('load', () => {
+      const savedHistory = localStorage.getItem('typingHistory');
+      if (savedHistory) {
+        typingHistory = JSON.parse(savedHistory);
+        renderHistory();
       }
-      textArea.value = finalTranscript + interimTranscript;
-    };
-  }
+      // Load dark mode preference
+      if(localStorage.getItem('darkMode') === 'true') {
+        body.classList.add('dark-mode');
+      }
+    });
 
-  startBtn.addEventListener('click', () => {
-    if (!recognizing) {
+    // Save history to localStorage
+    function saveHistory() {
+      localStorage.setItem('typingHistory', JSON.stringify(typingHistory));
+    }
+
+    // Render history in historyContainer
+    function renderHistory() {
+      if (typingHistory.length === 0) {
+        historyContainer.textContent = 'কোনো টাইপিং হিস্টোরি নেই।';
+        return;
+      }
+      historyContainer.textContent = '';
+      typingHistory.forEach((entry, i) => {
+        const div = document.createElement('div');
+        div.textContent = entry;
+        div.className = "mb-2 border-b border-gray-300 dark-mode:border-gray-600 pb-1";
+        historyContainer.appendChild(div);
+      });
+    }
+
+    // Dark Mode Toggle
+    toggleDarkMode.addEventListener('click', () => {
+      body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
+    });
+
+    // Check for browser support
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      status.textContent = '⚠️ আপনার ব্রাউজার voice typing সাপোর্ট করে না। Chrome ব্যবহার করুন।';
+      startBtn.disabled = true;
+      pushTalkBtn.disabled = true;
+    } else {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
       recognition.lang = languageSelect.value;
-      recognition.start();
+
+      recognition.onstart = () => {
+        recognizing = true;
+        status.textContent = '🎙️ টাইপিং চলছে...';
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        languageSelect.disabled = true;
+        pushTalkBtn.classList.add('active');
+      };
+
+      recognition.onerror = (event) => {
+        status.textContent = '❗ ভয়েস ত্রুটি: ' + event.error;
+      };
+
+      recognition.onend = () => {
+        recognizing = false;
+        status.textContent = '⛔ টাইপিং বন্ধ হয়েছে।';
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        languageSelect.disabled = false;
+        pushTalkBtn.classList.remove('active');
+        // Save final text to history on stop
+        if(finalTranscript.trim().length > 0) {
+          typingHistory.push(finalTranscript.trim());
+          saveHistory();
+          renderHistory();
+        }
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        textArea.value = finalTranscript + interimTranscript;
+        // Auto-scroll textarea to bottom
+        textArea.scrollTop = textArea.scrollHeight;
+      };
     }
-  });
 
-  stopBtn.addEventListener('click', () => {
-    if (recognizing) {
-      recognition.stop();
-    }
-  });
+    // Start button
+    startBtn.addEventListener('click', () => {
+      if (!recognizing) {
+        finalTranscript = textArea.value;
+        recognition.lang = languageSelect.value;
+        recognition.start();
+      }
+    });
 
-  clearBtn.addEventListener('click', () => {
-    textArea.value = '';
-    status.textContent = '';
-  });
+    // Stop button
+    stopBtn.addEventListener('click', () => {
+      if (recognizing) recognition.stop();
+    });
 
-  copyBtn.addEventListener('click', () => {
-    textArea.select();
-    document.execCommand('copy');
-    status.textContent = 'টেক্সট কপিপেস্ট করা হয়েছে!';
-    setTimeout(() => {
+    // Clear button
+    clearBtn.addEventListener('click', () => {
+      if(recognizing) recognition.stop();
+      textArea.value = '';
+      finalTranscript = '';
       status.textContent = '';
-    }, 2000);
-  });
+    });
 
-  languageSelect.addEventListener('change', () => {
-    if (recognizing) {
-      recognition.stop();
-    }
-    recognition.lang = languageSelect.value;
-  });
-</script>
+    // Copy button
+    copyBtn.addEventListener('click', () => {
+      textArea.select();
+      document.execCommand('copy');
+      status.textContent = '✅ কপি হয়ে গেছে!';
+      setTimeout(() => { status.textContent = ''; }, 1500);
+    });
 
+    // Export TXT button
+    exportTxtBtn.addEventListener('click', () => {
+      const text = textArea.value;
+      if(!text.trim()) {
+        status.textContent = '⚠️ এক্সপোর্ট করার জন্য কিছু লিখুন!';
+        return;
+      }
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'typed-text.txt';
+      a.click();
+    });
+
+    // Export PDF button
+    exportPdfBtn.addEventListener('click', () => {
+      const text = textArea.value;
+      if(!text.trim()) {
+        status.textContent = '⚠️ এক্সপোর্ট করার জন্য কিছু লিখুন!';
+        return;
+      }
+      const opt = {
+        margin:       0.5,
+        filename:     'typed-text.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().from(textArea).set(opt).save();
+    });
+
+    // Language change
+    languageSelect.addEventListener('change', () => {
+      if (recognizing) recognition.stop();
+      recognition.lang = languageSelect.value;
+    });
+
+    // Push-to-Talk: Hold to talk button logic
+    pushTalkBtn.addEventListener('mousedown', () => {
+      if (!recognizing) {
+        finalTranscript = textArea.value;
+        recognition.lang = languageSelect.value;
+        recognition.start();
+      }
+    });
+
+    pushTalkBtn.addEventListener('mouseup', () => {
+      if (recognizing) recognition.stop();
+    });
+
+    pushTalkBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (!recognizing) {
+        finalTranscript = textArea.value;
+        recognition.lang = languageSelect.value;
+        recognition.start();
+      }
+    });
+
+    pushTalkBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (recognizing) recognition.stop();
+    });
+
+    // Optional keyboard shortcut for push-to-talk (Spacebar)
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !recognizing && !e.repeat) {
+        e.preventDefault();
+        finalTranscript = textArea.value;
+        recognition.lang = languageSelect.value;
+        recognition.start();
+        pushTalkBtn.classList.add('active');
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' && recognizing) {
+        e.preventDefault();
+        recognition.stop();
+        pushTalkBtn.classList.remove('active');
+      }
+    });
+  </script>
 </body>
 </html>
