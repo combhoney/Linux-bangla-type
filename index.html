@@ -260,16 +260,22 @@
 
       recognition.onresult = (event) => {
   let interimTranscript = '';
-  for (let i = event.resultIndex; i < event.results.length; i++) {
+  let newFinal = '';
+
+  for (let i = event.resultIndex; i < event.results.length; ++i) {
     const transcript = event.results[i][0].transcript.trim();
     if (event.results[i].isFinal) {
-      if (!finalTranscript.includes(transcript)) {
-        finalTranscript += transcript + ' ';
-      }
+      newFinal += transcript + ' ';
     } else {
       interimTranscript += transcript + ' ';
     }
   }
+
+  // শুধু নতুন অংশ যোগ করো যাতে পুরানো অংশ বারবার না আসে
+  if (newFinal && !finalTranscript.endsWith(newFinal)) {
+    finalTranscript += newFinal;
+  }
+
   textArea.value = finalTranscript + interimTranscript;
   textArea.scrollTop = textArea.scrollHeight;
 };
