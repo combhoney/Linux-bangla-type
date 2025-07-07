@@ -2,31 +2,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Linux Bangla Type v2.0 (Phone to PC)</title>  <!-- Tailwind CSS CDN -->  <script src="https://cdn.tailwindcss.com"></script>  <!-- Google Fonts -->  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">  <!-- html2pdf.js for PDF export -->  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>  <style>
+  <title>Linux Bangla Type v2.0 (Phone to PC)</title>  <!-- Tailwind CSS CDN -->  <script src="https://cdn.tailwindcss.com"></script>  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>  <style>
     body {
       font-family: 'Noto Sans Bengali', sans-serif;
     }
-  </style></head><body class="min-h-screen bg-gray-100 text-gray-900">
-  <div class="max-w-4xl mx-auto p-4">
-    <h1 class="text-2xl font-bold text-center mb-4">Linux Bangla Type v2.0</h1><div class="flex flex-wrap gap-2 justify-center mb-4">
-  <select id="languageSelect" class="p-2 border rounded">
+  </style></head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <div class="max-w-5xl mx-auto py-6 px-4">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-bold">Linux Bangla Type v2.0</h1>
+      <button id="toggleDarkMode" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded">🌙 Toggle Mode</button>
+    </div><div class="flex flex-wrap gap-2 mb-4">
+  <select id="languageSelect" class="p-2 border border-gray-300 rounded text-black">
     <option value="bn-BD">বাংলা (বাংলাদেশ)</option>
     <option value="en-US" selected>English (US)</option>
     <option value="hi-IN">हिन्दी</option>
   </select>
-
-  <button id="startBtn" class="px-4 py-2 bg-green-600 text-white rounded">🎤 Start</button>
-  <button id="stopBtn" class="px-4 py-2 bg-red-600 text-white rounded" disabled>⛔ Stop</button>
-  <button id="clearBtn" class="px-4 py-2 bg-gray-600 text-white rounded">🧹 Clear</button>
-  <button id="copyBtn" class="px-4 py-2 bg-blue-600 text-white rounded">📋 Copy</button>
+  <button id="startBtn" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded">🎤 Start</button>
+  <button id="stopBtn" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded" disabled>⛔ Stop</button>
+  <button id="pushTalkBtn" class="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded">🎙️ Hold to Talk</button>
+  <button id="clearBtn" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">🧹 Clear</button>
+  <button id="copyBtn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded">📋 Copy</button>
+  <button id="exportTxtBtn" class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded">📄 Export .txt</button>
+  <button id="exportPdfBtn" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded">🧾 Export .pdf</button>
+  <button id="clearHistoryBtn" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded">🗂️ Clear History</button>
 </div>
 
-<div class="mb-4">
-  <button id="pushTalkBtn" class="w-full px-4 py-2 bg-purple-600 text-white rounded">🎙️ Hold to Talk</button>
-</div>
-
-<textarea id="textArea" rows="10" class="w-full p-3 border rounded resize-none" placeholder="এখানে কথা বলুন..."></textarea>
-<p id="status" class="mt-2 text-sm text-gray-600"></p>
+<textarea id="textArea" rows="12" class="w-full p-3 border rounded text-black resize-none" placeholder="এখানে কথা বলুন..."></textarea>
+<p id="status" class="mt-2 text-sm text-gray-400"></p>
 
   </div>  <script>
     const startBtn = document.getElementById('startBtn');
@@ -34,9 +38,13 @@
     const clearBtn = document.getElementById('clearBtn');
     const copyBtn = document.getElementById('copyBtn');
     const pushTalkBtn = document.getElementById('pushTalkBtn');
+    const exportTxtBtn = document.getElementById('exportTxtBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const textArea = document.getElementById('textArea');
     const status = document.getElementById('status');
     const languageSelect = document.getElementById('languageSelect');
+    const toggleDarkMode = document.getElementById('toggleDarkMode');
 
     let recognition;
     let recognizing = false;
@@ -92,6 +100,7 @@
 
         textArea.value = finalTranscript + interimTranscript;
         textArea.scrollTop = textArea.scrollHeight;
+        localStorage.setItem('typingHistory', finalTranscript);
       };
     }
 
@@ -121,12 +130,36 @@
       setTimeout(() => status.textContent = '', 1500);
     });
 
+    exportTxtBtn.addEventListener('click', () => {
+      const blob = new Blob([textArea.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'typed_text.txt';
+      a.click();
+    });
+
+    exportPdfBtn.addEventListener('click', () => {
+      const opt = {
+        margin: 1,
+        filename: 'typed_text.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().from(textArea).set(opt).save();
+    });
+
+    clearHistoryBtn.addEventListener('click', () => {
+      localStorage.removeItem('typingHistory');
+      textArea.value = '';
+      finalTranscript = '';
+    });
+
     languageSelect.addEventListener('change', () => {
       if (recognizing) recognition.stop();
       recognition.lang = languageSelect.value;
     });
 
-    // Push-to-Talk functionality
     pushTalkBtn.addEventListener('mousedown', () => {
       if (!recognizing) {
         finalTranscript = textArea.value;
@@ -152,5 +185,20 @@
       e.preventDefault();
       if (recognizing) recognition.stop();
     });
+
+    toggleDarkMode.addEventListener('click', () => {
+      document.body.classList.toggle('bg-gray-100');
+      document.body.classList.toggle('bg-gray-900');
+      document.body.classList.toggle('text-white');
+      document.body.classList.toggle('text-black');
+    });
+
+    window.onload = () => {
+      const savedText = localStorage.getItem('typingHistory');
+      if (savedText) {
+        textArea.value = savedText;
+        finalTranscript = savedText;
+      }
+    };
   </script></body>
 </html>
