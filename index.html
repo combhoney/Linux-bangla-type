@@ -259,20 +259,20 @@
       };
 
       recognition.onresult = (event) => {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-        textArea.value = finalTranscript + interimTranscript;
-        // Auto-scroll textarea to bottom
-        textArea.scrollTop = textArea.scrollHeight;
-      };
+  let interimTranscript = '';
+  for (let i = event.resultIndex; i < event.results.length; i++) {
+    const transcript = event.results[i][0].transcript.trim();
+    if (event.results[i].isFinal) {
+      if (!finalTranscript.includes(transcript)) {
+        finalTranscript += transcript + ' ';
+      }
+    } else {
+      interimTranscript += transcript + ' ';
     }
+  }
+  textArea.value = finalTranscript + interimTranscript;
+  textArea.scrollTop = textArea.scrollHeight;
+};
 
     // Start button
     startBtn.addEventListener('click', () => {
