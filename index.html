@@ -1,13 +1,17 @@
 <!DOCTYPE html><html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Linux Bangla Type v2.0 (Phone to PC)</title>  <!-- Tailwind CSS CDN -->  <script src="https://cdn.tailwindcss.com"></script>  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>  <style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linux Bangla Type v2.0</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
     body {
       font-family: 'Noto Sans Bengali', sans-serif;
     }
-  </style></head>
+  </style>
+</head>
 <body class="bg-gray-900 text-white min-h-screen">
   <div class="max-w-5xl mx-auto py-6 px-4">
     <div class="flex items-center justify-between mb-4">
@@ -49,6 +53,7 @@
     let recognition;
     let recognizing = false;
     let finalTranscript = '';
+    let lastFinal = '';
 
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       status.textContent = '⚠️ Chrome ব্রাউজারে খুলুন, এটি voice typing সাপোর্ট করে না।';
@@ -82,7 +87,7 @@
       };
 
       recognition.onresult = (event) => {
-        let interimTranscript = '';
+        let interim = '';
         let newFinal = '';
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -90,17 +95,18 @@
           if (event.results[i].isFinal) {
             newFinal += transcript + ' ';
           } else {
-            interimTranscript += transcript + ' ';
+            interim += transcript + ' ';
           }
         }
 
-        if (newFinal && !finalTranscript.endsWith(newFinal)) {
+        if (newFinal && newFinal !== lastFinal) {
           finalTranscript += newFinal;
+          lastFinal = newFinal;
+          localStorage.setItem('typingHistory', finalTranscript);
         }
 
-        textArea.value = finalTranscript + interimTranscript;
+        textArea.value = finalTranscript + interim;
         textArea.scrollTop = textArea.scrollHeight;
-        localStorage.setItem('typingHistory', finalTranscript);
       };
     }
 
@@ -120,6 +126,7 @@
       if (recognizing) recognition.stop();
       textArea.value = '';
       finalTranscript = '';
+      lastFinal = '';
       status.textContent = '';
     });
 
@@ -153,6 +160,7 @@
       localStorage.removeItem('typingHistory');
       textArea.value = '';
       finalTranscript = '';
+      lastFinal = '';
     });
 
     languageSelect.addEventListener('change', () => {
@@ -167,11 +175,9 @@
         recognition.start();
       }
     });
-
     pushTalkBtn.addEventListener('mouseup', () => {
       if (recognizing) recognition.stop();
     });
-
     pushTalkBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (!recognizing) {
@@ -180,7 +186,6 @@
         recognition.start();
       }
     });
-
     pushTalkBtn.addEventListener('touchend', (e) => {
       e.preventDefault();
       if (recognizing) recognition.stop();
